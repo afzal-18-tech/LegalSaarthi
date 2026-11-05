@@ -1,0 +1,3 @@
+"""
+LegalSaarthi — LLM Generation Module
+"""

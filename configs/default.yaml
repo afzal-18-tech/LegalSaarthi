@@ -1,0 +1,128 @@
+# LegalSaarthi Default Configuration
+# ===================================
+
+project:
+  name: "LegalSaarthi"
+  version: "0.1.0"
+
+# Data source: AWS S3 public bucket (no auth required)
+data_source:
+  bucket_name: "indian-supreme-court-judgments"
+  region: "ap-south-1"
+  base_url: "https://indian-supreme-court-judgments.s3.ap-south-1.amazonaws.com"
+  license: "CC-BY-4.0"
+  # Path templates
+  paths:
+    metadata_parquet: "metadata/parquet/year={year}/metadata.parquet"
+    pdf_english: "data/pdf/year={year}/english/{filename}"
+    index_english: "data/tar/year={year}/english/english.index.json"
+    metadata_json: "metadata/json/year={year}/{filename}"
+
+# Scope
+scope:
+  jurisdiction: "India"
+  court: "Supreme Court"
+  language: "english"
+  year_start: 2015
+  year_end: 2025
+
+# Acquisition settings
+acquisition:
+  # Rate limiting: max requests per second
+  rate_limit_rps: 2.0
+  # HTTP timeout in seconds
+  timeout_seconds: 60
+  # Number of retries
+  max_retries: 3
+  # Backoff factor for exponential retry
+  backoff_factor: 2.0
+  # Concurrent downloads (keep low to be responsible)
+  max_concurrent: 1
+  # User-Agent header
+  user_agent: "LegalSaarthi-Research/0.1 (academic-research)"
+
+# Staged acquisition gates
+stages:
+  smoke:
+    target: 10
+    min_success_rate: 0.90
+  pilot:
+    target: 50
+    min_success_rate: 0.95
+  prototype:
+    target: 200
+    min_success_rate: 0.95
+  main:
+    target: 1000
+    min_success_rate: 0.95
+
+# PDF validation
+validation:
+  # Minimum PDF file size in bytes (reject empty/corrupt)
+  min_file_size: 1024
+  # PDF magic bytes check
+  check_pdf_signature: true
+  # SHA-256 checksums
+  compute_sha256: true
+
+# Local paths (relative to project root)
+paths:
+  raw_pdfs: "data/raw"
+  metadata: "data/metadata"
+  processed: "data/processed"
+  manifests: "data/metadata"
+  logs: "logs"
+  reports: "reports"
+  experiments: "experiments"
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+  file: "logs/legalsaarthi.log"
+
+# Structure detection (Phase 7)
+structure_detection:
+  output_dir: "data/processed/structured"
+  labels:
+    - "HEADER"
+    - "FACTS"
+    - "ISSUES"
+    - "ARGUMENTS"
+    - "LAW"
+    - "PRECEDENTS"
+    - "REASONING"
+    - "DECISION"
+    - "UNKNOWN"
+  # Positional heuristics
+  header_page_threshold: 2        # pages 1-2 bias toward HEADER
+  decision_tail_ratio: 0.15       # last 15% of document biases toward DECISION
+
+# Chunking (Phase 8)
+chunking:
+  output_dir: "data/processed/chunks"
+  default_strategy: "section_aware" # Options: paragraph, fixed_size, section_aware
+  max_words: 300
+  overlap_words: 50
+
+# Retrieval (Phase 10)
+retrieval:
+  bm25:
+    tokenizer: "simple"
+  dense:
+    model_name: "all-MiniLM-L6-v2"
+    batch_size: 64
+  hybrid:
+    fusion_method: "rrf"
+    k_rrf: 60
+    alpha: 0.5
+    candidate_k: 50
+generation:
+  model_name: "ollama/qwen3:8b"
+  fallback_model: "gemini/gemini-3.5-flash-lite"
+  judge_model: "ollama/qwen3:8b"
+  temperature: 0.0
+  max_tokens: 512
+evaluation:
+  top_k_values: [5, 10, 20]
+

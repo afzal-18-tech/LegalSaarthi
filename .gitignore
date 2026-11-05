@@ -1,0 +1,39 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Local data, user state, and generated research artifacts
+data/
+experiments/
+reports/
+logs/
+scratch/
+scratch_prompt.txt
+AGENTS.md
+PHASE_STATUS.md
+FINAL_PROJECT_REPORT_LEGALSAARTHI.md
+src/__init__ - Copy.py
+*.log
+*.sqlite
+*.sqlite3
+*.db
+*.pkl
+*.npy
+*.bin
+*.xlsx
+
+# Editor and operating-system files
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
